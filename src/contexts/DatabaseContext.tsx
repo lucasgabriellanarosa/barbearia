@@ -3,7 +3,14 @@ import { getDatabase, ref, onValue } from "firebase/database";
 import type { DatabaseData } from '../@types/Database';
 import app from '../firebase';
 
-const DatabaseContext = createContext();
+const defaultDatabaseData: DatabaseData = {
+  categories: [],
+  expenses: [],
+  haircuts: [],
+  daily_reports: []
+};
+
+const DatabaseContext = createContext<DatabaseData>(defaultDatabaseData);
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
