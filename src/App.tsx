@@ -4,16 +4,27 @@ import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import SectionContainer from './components/SectionContainer';
-import { FaPencil } from 'react-icons/fa6';
+import { FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
+import type { DailyReport, DatabaseData } from './@types/Database';
 
 function App() {
 
-  const data = useDatabaseContext()
+  const data = useDatabaseContext() as DatabaseData
 
   const today = dayjs();
   const [selectedDate, setSelectedDate] = useState(today)
+  // Obter todos os dias do mês atual
+  const daysInMonth = Array.from(
+    { length: selectedDate.daysInMonth() },
+    (_, i) => selectedDate.startOf('month').add(i, 'day')
+  );
 
-  const [reports, setReports] = useState({
+  // Função para navegar entre meses
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setSelectedDate(prev => prev[direction === 'prev' ? 'subtract' : 'add'](1, 'month'));
+  };
+
+  const [reports, setReports] = useState<DailyReport>({
     date: "",
     expenses: [],
     haircuts: []
@@ -21,12 +32,17 @@ function App() {
 
   useEffect(() => {
     if (data.daily_reports) {
+
+      console.log(data.daily_reports)
+
       const filteredReport = data.daily_reports.find(report =>
-        dayjs(report.date).format('YYYY-MM-DD') === selectedDate.format('YYYY-MM-DD')
+        report.date === selectedDate.format('DD-MM-YYYY')
       );
 
+      console.log("Filtered Report", filteredReport)
+
       setReports(filteredReport || {
-        date: selectedDate.format('YYYY-MM-DD'),
+        date: selectedDate.format('DD-MM-YYYY'),
         expenses: [],
         haircuts: []
       });
@@ -34,41 +50,52 @@ function App() {
 
   }, [selectedDate, data.daily_reports])
 
-  console.log(reports)
+  const totalHaircuts = reports.haircuts.reduce((sum, haircut) => {
+    return sum + Number(data.haircuts[haircut.id]?.price || 0);
+  }, 0);
 
+  const totalExpenses = reports.expenses.reduce((sum, expense) => {
+    return sum + Number(data.expenses[expense.id]?.price || 0);
+  }, 0);
 
   return (
     <>
-      <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900'>
+      <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900 shadow-xl'>
 
         <section className='flex flex-col py-2 px-4 font-croissant'>
-
           <div className='flex flex-row justify-between'>
             <button className='text-base'>{selectedDate.format("YYYY")}</button>
-
-            <div className='w-[40px] h-[40px] bg-center bg-cover rounded-full' style={{ backgroundImage: "url('/rhuan.jpg')" }}>
-            </div>
           </div>
 
           <nav className='flex flex-row items-center justify-around text-2xl'>
-            <span>
+            <span onClick={() => navigateMonth('prev')} className="cursor-pointer">
               <MdNavigateBefore />
             </span>
-            <button className='text-lg font-bold'>Junho</button>
-            <span>
+            <button className='text-lg font-bold'>{selectedDate.format("MMMM")}</button>
+            <span onClick={() => navigateMonth('next')} className="cursor-pointer">
               <MdNavigateNext />
             </span>
           </nav>
-
         </section>
 
-        <ul className='bg-slate-800 flex flex-row py-2 gap-4 px-4 font-croissant'>
-          <li className='text-rose-200 bg-slate-700 py-1 px-2 rounded-sm'>17</li>
+        <ul className='bg-slate-800 flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant'>
+          {daysInMonth.map((day) => (
+            <li
+              key={day.format('DD-MM-YYYY')}
+              className={`py-1 px-2 rounded-sm cursor-pointer ${day.isSame(selectedDate, 'day')
+                ? 'text-rose-200 bg-slate-700' // Estilo para dia selecionado
+                : 'text-slate-300 hover:bg-slate-700' // Estilo para dias não selecionados
+                }`}
+              onClick={() => setSelectedDate(day)}
+            >
+              {day.format('D')}
+            </li>
+          ))}
         </ul>
 
-      </header>
+      </header >
 
-      <main className='py-36 px-2 bg-slate-50 text-rose-900 flex flex-col gap-4'>
+      <main className='pt-36 pb-8 px-2 bg-slate-50 text-rose-900 flex flex-col gap-4'>
 
         <section className='flex flex-col justify-center items-center'>
           <h1 className='text-lg font-bold'>{selectedDate.format("DD/MM/YYYY")}</h1>
@@ -87,8 +114,8 @@ function App() {
             {
               data.haircuts.map((haircut, key) => (
 
-                <li className='flex flex-row items-center justify-between text-rose-100 text-xl'>
-                  <span className='font-extralight text-base'>
+                <li className='flex flex-row items-center justify-between text-rose-100 text-xl' key={key}>
+                  <span className='font-light text-base'>
                     {haircut.name} (R${haircut.price})
                   </span>
 
@@ -101,55 +128,69 @@ function App() {
 
           </ul>
 
-
         </SectionContainer>
-
 
         <SectionContainer>
 
-          <div>
-            <h2>Cortes do dia</h2>
-            <span>+</span>
+          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+            <h2 className='font-bold text-lg'>Lucros do dia</h2>
+            <FaCaretUp />
+            {/* <FaCaretDown /> */}
           </div>
 
           <ul>
-            <li>
-              <span>+</span>
-              Corte 1 - R$30,00
-            </li>
+
+            {
+              reports.haircuts.map((haircut, key) => (
+                <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+
+                  <FaTrash />
+
+                  <span className='font-light text-base'>
+                    {data.haircuts[haircut.id].name} - R${data.haircuts[haircut.id].price}
+                  </span>
+
+                </li>
+              ))
+            }
+
           </ul>
 
         </SectionContainer>
 
-        <p>Lucros Totais: +R$75,00</p>
+        <p className='text-lg font-bold'>Lucros Totais: +R${totalHaircuts.toFixed(2)}</p>
 
         <SectionContainer>
 
-          <div>
-            <h2>Gastos</h2>
-            <span>+</span>
+          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+            <h2 className='font-bold text-lg'>Gastos</h2>
+            <FaPencil />
           </div>
 
-          <form>
+          <form className='flex flex-col gap-4'>
 
-            <div>
-              <label>Gasto</label>
-              <input />
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-rose-100'>Gasto</label>
+              <input className='border border-black rounded-md bg-white py-1 px-2' />
             </div>
 
-            <div>
-              <label>Valor em R$</label>
-              <input />
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-rose-100'>Valor</label>
+              <input className='border border-black rounded-md bg-white py-1 px-2' />
             </div>
 
-            <div>
-              <label>Categoria</label>
-              <select>
-                <option value="comida">comida</option>
+            <div className='flex flex-col gap-1'>
+              <label className='text-sm text-rose-100'>Categoria</label>
+              <select className='bg-white py-1 px-2 capitalize rounded-md'>
+                {
+                  data.categories.map((category, key) => (
+                    <option value={category.name} key={key}>{category.name}</option>
+                  ))
+                }
               </select>
             </div>
 
-            <button>
+            <button className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'>
               + Salvar Gasto
             </button>
 
@@ -159,24 +200,40 @@ function App() {
 
         <SectionContainer>
 
-          <div>
-            <h2>Gastos do dia</h2>
-            <span>+</span>
+          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+            <h2 className='font-bold text-lg'>Gastos do dia</h2>
+            <FaCaretUp />
+            {/* <FaCaretDown /> */}
           </div>
 
+
           <ul>
-            <li>
-              <span>+</span>
-              Energético - R$4,00
-            </li>
+
+            {
+
+              reports.expenses.map((expense, key) => (
+                <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+
+                  <FaTrash />
+
+                  <span className='font-light text-base'>
+                    {data.expenses[expense.id].name} - R${data.expenses[expense.id].price}
+                  </span>
+
+                </li>
+              ))
+
+            }
+
           </ul>
+
+
 
         </SectionContainer>
 
-        <p>Gastos Totais: -R$64,00</p>
+        <p className='text-lg font-bold'>Gastos Totais: -R${totalExpenses.toFixed(2)}</p>
 
       </main>
-
 
     </>
   )

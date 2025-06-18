@@ -13,7 +13,7 @@ interface Haircut {
   price: number;
 }
 
-interface DailyReport {
+export interface DailyReport {
   date: string;
   expenses: { id: number }[];
   haircuts: { id: number }[];
