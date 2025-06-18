@@ -4,7 +4,7 @@ import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import SectionContainer from './components/SectionContainer';
-import { FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
+import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
 import type { DailyReport, DatabaseData } from './@types/Database';
 
 function App() {
@@ -75,6 +75,11 @@ function App() {
 
   const total = totalHaircuts - totalExpenses
 
+  // Open and Close Logic
+
+  const [isHaircutsOpen, setIsHaircutsOpen] = useState(false)
+  const [isExpensesOpen, setIsExpensesOpen] = useState(false)
+
   return (
     <>
       <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900 shadow-xl'>
@@ -104,8 +109,8 @@ function App() {
               key={day.format('DD-MM-YYYY')}
               data-day={day.format('DD-MM-YYYY')}
               className={`py-1 px-2 rounded-sm cursor-pointer min-w-[2.5rem] text-center ${day.isSame(selectedDate, 'day')
-                  ? 'text-rose-200 bg-rose-900'
-                  : 'text-rose-200 bg-slate-700 hover:bg-rose-700'
+                ? 'text-rose-200 bg-rose-900'
+                : 'text-rose-200 bg-slate-700 hover:bg-rose-700'
                 }`}
               onClick={() => setSelectedDate(day)}
             >
@@ -155,11 +160,24 @@ function App() {
 
           <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
             <h2 className='font-bold text-lg'>Lucros do dia</h2>
-            <FaCaretUp />
-            {/* <FaCaretDown /> */}
+
+
+            <button
+              onClick={() => setIsHaircutsOpen(!isHaircutsOpen)}
+            >
+
+              {
+                isHaircutsOpen ?
+                  <FaCaretUp />
+                  :
+                  <FaCaretDown />
+              }
+
+            </button>
+
           </div>
 
-          <ul>
+          <ul className={`transition-all duration-100 ${isHaircutsOpen ? 'block' : 'hidden'}`}>
 
             {
               reports.haircuts.map((haircut, key) => (
@@ -223,12 +241,22 @@ function App() {
 
           <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
             <h2 className='font-bold text-lg'>Gastos do dia</h2>
-            <FaCaretUp />
-            {/* <FaCaretDown /> */}
+
+            <button onClick={() => setIsExpensesOpen(!isExpensesOpen)}>
+
+              {
+                isExpensesOpen ?
+                <FaCaretUp />
+                :
+                <FaCaretDown /> 
+              }
+
+            </button>
+
           </div>
 
 
-          <ul>
+          <ul className={`transition-all duration-100 ${isExpensesOpen ? 'block' : 'hidden'}`}>
 
             {
 
