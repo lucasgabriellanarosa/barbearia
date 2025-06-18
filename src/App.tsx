@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
@@ -9,20 +9,24 @@ import type { DailyReport, DatabaseData } from './@types/Database';
 
 function App() {
 
+  // Database
   const data = useDatabaseContext() as DatabaseData
 
+  // Date
   const today = dayjs();
   const [selectedDate, setSelectedDate] = useState(today)
-  // Obter todos os dias do mês atual
+  const carouselRef = useRef<HTMLUListElement>(null);
+
   const daysInMonth = Array.from(
     { length: selectedDate.daysInMonth() },
     (_, i) => selectedDate.startOf('month').add(i, 'day')
   );
 
-  // Função para navegar entre meses
   const navigateMonth = (direction: 'prev' | 'next') => {
     setSelectedDate(prev => prev[direction === 'prev' ? 'subtract' : 'add'](1, 'month'));
   };
+
+  // Daily Reports
 
   const [reports, setReports] = useState<DailyReport>({
     date: "",
@@ -31,15 +35,11 @@ function App() {
   })
 
   useEffect(() => {
+    // 1. Atualizar os reports (sua lógica existente)
     if (data.daily_reports) {
-
-      console.log(data.daily_reports)
-
       const filteredReport = data.daily_reports.find(report =>
         report.date === selectedDate.format('DD-MM-YYYY')
       );
-
-      console.log("Filtered Report", filteredReport)
 
       setReports(filteredReport || {
         date: selectedDate.format('DD-MM-YYYY'),
@@ -48,7 +48,22 @@ function App() {
       });
     }
 
-  }, [selectedDate, data.daily_reports])
+    // 2. Scroll para o dia selecionado (nova lógica)
+    if (carouselRef.current) {
+      const selectedDayElement = carouselRef.current.querySelector(
+        `[data-day="${selectedDate.format('DD-MM-YYYY')}"]`
+      );
+
+      selectedDayElement?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+
+  }, [selectedDate, data.daily_reports]);
+
+  // Money Values
 
   const totalHaircuts = reports.haircuts.reduce((sum, haircut) => {
     return sum + Number(data.haircuts[haircut.id]?.price || 0);
@@ -57,6 +72,8 @@ function App() {
   const totalExpenses = reports.expenses.reduce((sum, expense) => {
     return sum + Number(data.expenses[expense.id]?.price || 0);
   }, 0);
+
+  const total = totalHaircuts - totalExpenses
 
   return (
     <>
@@ -78,13 +95,17 @@ function App() {
           </nav>
         </section>
 
-        <ul className='bg-slate-800 flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant'>
+        <ul
+          ref={carouselRef}
+          className='bg-slate-800 flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant scrollbar-hide'
+        >
           {daysInMonth.map((day) => (
             <li
               key={day.format('DD-MM-YYYY')}
-              className={`py-1 px-2 rounded-sm cursor-pointer ${day.isSame(selectedDate, 'day')
-                ? 'text-rose-200 bg-slate-700' // Estilo para dia selecionado
-                : 'text-slate-300 hover:bg-slate-700' // Estilo para dias não selecionados
+              data-day={day.format('DD-MM-YYYY')}
+              className={`py-1 px-2 rounded-sm cursor-pointer min-w-[2.5rem] text-center ${day.isSame(selectedDate, 'day')
+                  ? 'text-rose-200 bg-rose-900'
+                  : 'text-rose-200 bg-slate-700 hover:bg-rose-700'
                 }`}
               onClick={() => setSelectedDate(day)}
             >
@@ -99,7 +120,7 @@ function App() {
 
         <section className='flex flex-col justify-center items-center'>
           <h1 className='text-lg font-bold'>{selectedDate.format("DD/MM/YYYY")}</h1>
-          <p className='text-base text-rose-800'>Total do dia: <span className='font-bold'>+R$11,00</span></p>
+          <p className='text-base text-rose-800'>Total do dia: <span className='font-bold'>R${total}</span></p>
         </section>
 
         <SectionContainer>
