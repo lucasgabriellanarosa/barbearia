@@ -1,36 +1,45 @@
 import { useState } from 'react'
 import './App.css'
 import { useDatabaseContext } from './contexts/DatabaseContext'
+import dayjs from 'dayjs';
+import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 
 function App() {
 
   const data = useDatabaseContext()
 
-  const [selectedDate, setSelectedDate] = useState()
+  const today = dayjs();
+  const [selectedDate, setSelectedDate] = useState(today)
+
 
   return (
     <>
-      <header>
+      <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900'>
 
-        <section>
-          <div>
-            <button>2025</button>
-            <img src="#" />
+        <section className='flex flex-col py-2 px-4 font-croissant'>
+
+          <div className='flex flex-row justify-between'>
+            <button className='text-base'>{selectedDate.format("YYYY")}</button>
+
+            <div className='w-[40px] h-[40px] bg-center bg-cover rounded-full' style={{backgroundImage: "url('/rhuan.jpg')"}}>
+            </div>
           </div>
-          <nav>
-            <span>-</span>
-            <button>Junho</button>
-            <span>+</span>
+
+          <nav className='flex flex-row items-center justify-around text-2xl'>
+            <span>
+              <MdNavigateBefore />
+            </span>
+            <button className='text-lg'>Junho</button>
+            <span>
+              <MdNavigateNext />
+            </span>
           </nav>
+
         </section>
 
-        <nav>
-          <ul>
-            <li>17</li>
-            <li>18</li>
-            <li>19</li>
-          </ul>
-        </nav>
+        <ul className='bg-slate-800 flex flex-row py-2 gap-4 px-4 font-croissant'>
+          <li className='text-rose-200 bg-slate-700 py-1 px-2 rounded-sm'>17</li>
+        </ul>
 
       </header>
 
