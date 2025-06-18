@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
-import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
+import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
+import SectionContainer from './components/SectionContainer';
+import { FaPencil } from 'react-icons/fa6';
 
 function App() {
 
@@ -10,6 +12,29 @@ function App() {
 
   const today = dayjs();
   const [selectedDate, setSelectedDate] = useState(today)
+
+  const [reports, setReports] = useState({
+    date: "",
+    expenses: [],
+    haircuts: []
+  })
+
+  useEffect(() => {
+    if (data.daily_reports) {
+      const filteredReport = data.daily_reports.find(report =>
+        dayjs(report.date).format('YYYY-MM-DD') === selectedDate.format('YYYY-MM-DD')
+      );
+
+      setReports(filteredReport || {
+        date: selectedDate.format('YYYY-MM-DD'),
+        expenses: [],
+        haircuts: []
+      });
+    }
+
+  }, [selectedDate, data.daily_reports])
+
+  console.log(reports)
 
 
   return (
@@ -21,7 +46,7 @@ function App() {
           <div className='flex flex-row justify-between'>
             <button className='text-base'>{selectedDate.format("YYYY")}</button>
 
-            <div className='w-[40px] h-[40px] bg-center bg-cover rounded-full' style={{backgroundImage: "url('/rhuan.jpg')"}}>
+            <div className='w-[40px] h-[40px] bg-center bg-cover rounded-full' style={{ backgroundImage: "url('/rhuan.jpg')" }}>
             </div>
           </div>
 
@@ -29,7 +54,7 @@ function App() {
             <span>
               <MdNavigateBefore />
             </span>
-            <button className='text-lg'>Junho</button>
+            <button className='text-lg font-bold'>Junho</button>
             <span>
               <MdNavigateNext />
             </span>
@@ -43,32 +68,44 @@ function App() {
 
       </header>
 
-      <main>
+      <main className='py-36 px-2 bg-slate-50 text-rose-900 flex flex-col gap-4'>
 
-        <section>
-          <h1>17 de Junho de 2025</h1>
-          <p>Total do dia: +R$11,00</p>
+        <section className='flex flex-col justify-center items-center'>
+          <h1 className='text-lg font-bold'>{selectedDate.format("DD/MM/YYYY")}</h1>
+          <p className='text-base text-rose-800'>Total do dia: <span className='font-bold'>+R$11,00</span></p>
         </section>
 
-        <section>
+        <SectionContainer>
 
-          <div>
-            <h2>Cortes</h2>
-            <span>+</span>
+          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+            <h2 className='font-bold text-lg'>Cortes</h2>
+            <FaPencil />
           </div>
 
-          <ul>
-            <li>
-              <span>
-                Corte 1 (R$30,00)
-              </span>
-              <span>+</span>
-            </li>
+          <ul className='flex flex-col gap-2'>
+
+            {
+              data.haircuts.map((haircut, key) => (
+
+                <li className='flex flex-row items-center justify-between text-rose-100 text-xl'>
+                  <span className='font-extralight text-base'>
+                    {haircut.name} (R${haircut.price})
+                  </span>
+
+                  <MdAddCircleOutline />
+
+                </li>
+
+              ))
+            }
+
           </ul>
 
-        </section>
 
-        <section>
+        </SectionContainer>
+
+
+        <SectionContainer>
 
           <div>
             <h2>Cortes do dia</h2>
@@ -82,11 +119,11 @@ function App() {
             </li>
           </ul>
 
-        </section>
+        </SectionContainer>
 
         <p>Lucros Totais: +R$75,00</p>
 
-        <section>
+        <SectionContainer>
 
           <div>
             <h2>Gastos</h2>
@@ -118,9 +155,9 @@ function App() {
 
           </form>
 
-        </section>
+        </SectionContainer>
 
-        <section>
+        <SectionContainer>
 
           <div>
             <h2>Gastos do dia</h2>
@@ -134,7 +171,7 @@ function App() {
             </li>
           </ul>
 
-        </section>
+        </SectionContainer>
 
         <p>Gastos Totais: -R$64,00</p>
 
