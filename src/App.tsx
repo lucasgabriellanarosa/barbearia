@@ -65,15 +65,19 @@ function App() {
       });
     }
 
+    if (data.categories && data.categories.length > 0) {
+      setExpenseCategory(prev => prev || data.categories[0].name);
+    }
+
   }, [selectedDate, data.daily_reports]);
 
   // Money Values
   const totalHaircuts = (reports.haircuts || []).reduce((sum, haircut) => {
-    return sum + Number(data.haircuts?.[haircut.id]?.price || 0);
+    return sum + Number(data.haircuts?.[haircut.haircut_id]?.price || 0);
   }, 0);
 
   const totalExpenses = (reports.expenses || []).reduce((sum, expense) => {
-    return sum + Number(data.expenses?.[expense.id]?.price || 0);
+    return sum + Number(expense.price || 0);
   }, 0);
 
   const total = totalHaircuts - totalExpenses
@@ -88,54 +92,124 @@ function App() {
   const db = getDatabase();
   const selectedDateFormatted = selectedDate.format('DD-MM-YYYY');
 
-  const addHaircutDone = async (haircutId: number) => {
+  const existingReport = dailyReportsArray.find(
+    report => report.date === selectedDateFormatted
+  );
 
-    const existingReport = dailyReportsArray.find(
-      report => report.date === selectedDateFormatted
-    );
+  const addHaircutDone = async (haircutId: number) => {
 
     if (existingReport) {
       const reportRef = ref(db, `daily_reports/${existingReport.id}`);
 
       const newHaircut = {
-        id: haircutId,
+        id: Date.now().toString(),
+        haircut_id: haircutId,
       };
 
       await update(reportRef, {
-        haircuts: [...existingReport.haircuts, newHaircut]
+        ...existingReport,
+        haircuts: [...(Array.isArray(existingReport.haircuts) ? existingReport.haircuts : []), newHaircut]
+
       });
 
     } else {
       const newId = Object.keys(data.daily_reports || {}).length.toString();
       await set(ref(db, `daily_reports/${newId}`), {
         date: selectedDateFormatted,
-        expenses: [{}],
-        haircuts: [{ id: haircutId }],
+        expenses: [],
+        haircuts: [{ id: Date.now().toString(), haircut_id: haircutId }],
         id: newId
       });
-
     }
-
   };
 
-  const deleteHaircutDone = async (haircutId: number) => {
-    const existingReport = dailyReportsArray.find(
-      report => report.date === selectedDateFormatted
-    );
+  const deleteHaircutDone = async (haircutToDelete: number) => {
 
     if (existingReport) {
       const reportRef = ref(db, `daily_reports/${existingReport.id}`);
 
-      // Filtra os cortes de cabelo removendo aquele com o id passado
-      const updatedHaircuts = existingReport.haircuts.filter(
-        (haircut: { id: number }) => haircut.id !== haircutId
+      const updatedHaircuts = (Array.isArray(existingReport.haircuts) ? existingReport.haircuts : []).filter(
+        (haircut: { id: number }) => haircut.id !== haircutToDelete
       );
 
       await update(reportRef, {
+        ...existingReport,
         haircuts: updatedHaircuts
       });
     }
   };
+
+  // Expenses Add and Remove
+
+  const [expenseName, setExpenseName] = useState('');
+  const [expensePrice, setExpensePrice] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState(data.categories[0]?.name || '');
+
+  const addExpense = async () => {
+
+    if (!expenseName || !expensePrice || !expenseCategory) {
+
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    const newExpense = {
+      id: Date.now().toString(),
+      name: expenseName,
+      price: parseFloat(expensePrice),
+      category: expenseCategory
+    };
+
+
+    if (existingReport) {
+
+      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+
+      await update(reportRef, {
+        ...existingReport,
+        expenses: [...(Array.isArray(existingReport.expenses) ? existingReport.expenses : []), newExpense]
+
+      });
+
+    } else {
+
+      const newId = Date.now().toString();
+      await set(ref(db, `daily_reports/${newId}`), {
+        date: selectedDateFormatted,
+        expenses: [{
+          id: Object.keys(data.daily_reports || {}).length.toString(),
+          name: expenseName,
+          price: parseFloat(expensePrice),
+          category: expenseCategory
+        }],
+        haircuts: [{}],
+        id: newId
+      });
+    }
+
+    setExpenseName('');
+    setExpensePrice('');
+    setExpenseCategory(data.categories[0]?.name || '');
+
+
+  };
+
+  const deleteExpense = async (expenseId: number) => {
+
+    if (existingReport) {
+      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+
+      const updatedExpenses = (Array.isArray(existingReport.expenses) ? existingReport.expenses : []).filter(
+        (expense: { id: number }) => expense.id !== expenseId
+      );
+
+      await update(reportRef, {
+        ...existingReport,
+        expenses: updatedExpenses
+      });
+    }
+
+  }
 
   return (
     <>
@@ -257,7 +331,7 @@ function App() {
                     </button>
 
                     <span className='font-light text-base'>
-                      {data.haircuts[haircut.id].name} - R${data.haircuts[haircut.id].price}
+                      {data.haircuts[haircut.haircut_id].name} - R${data.haircuts[haircut.haircut_id].price}
                     </span>
 
                   </li>
@@ -279,30 +353,50 @@ function App() {
             <FaPencil />
           </div>
 
-          <form className='flex flex-col gap-4'>
+          <form className='flex flex-col gap-4'
+            onSubmit={(e) => {
+              e.preventDefault();
+              addExpense();
+            }}
+          >
 
             <div className='flex flex-col gap-1'>
               <label className='text-sm text-rose-100'>Gasto</label>
-              <input className='border border-black rounded-md bg-white py-1 px-2' />
+              <input
+                className='border border-black rounded-md bg-white py-1 px-2'
+                value={expenseName}
+                onChange={(e) => setExpenseName(e.target.value)}
+              />
             </div>
 
             <div className='flex flex-col gap-1'>
               <label className='text-sm text-rose-100'>Valor</label>
-              <input className='border border-black rounded-md bg-white py-1 px-2' />
+              <input
+                className='border border-black rounded-md bg-white py-1 px-2'
+                type='number'
+                value={expensePrice}
+                onChange={(e) => setExpensePrice(e.target.value)}
+              />
             </div>
 
             <div className='flex flex-col gap-1'>
               <label className='text-sm text-rose-100'>Categoria</label>
-              <select className='bg-white py-1 px-2 capitalize rounded-md'>
-                {
-                  data.categories.map((category, key) => (
-                    <option value={category.name} key={key}>{category.name}</option>
-                  ))
-                }
+
+              <select
+                className='bg-white py-1 px-2 capitalize rounded-md'
+                value={expenseCategory}
+                onChange={(e) => setExpenseCategory(e.target.value)}
+              >
+                {data.categories.map((category, key) => (
+                  <option value={category.name} key={key}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
+
             </div>
 
-            <button className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'>
+            <button type='submit' className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'>
               + Salvar Gasto
             </button>
 
@@ -337,10 +431,14 @@ function App() {
                 reports.expenses.map((expense, key) => (
                   <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
 
-                    <FaTrash />
+                    <button
+                      onClick={() => deleteExpense(expense.id)}
+                    >
+                      <FaTrash />
+                    </button>
 
                     <span className='font-light text-base'>
-                      {data.expenses[expense.id].name} - R${data.expenses[expense.id].price}
+                      {expense.name} - R${expense.price}
                     </span>
 
                   </li>

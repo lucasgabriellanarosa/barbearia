@@ -12,12 +12,15 @@ interface Haircut {
   name: string;
   price: number;
   id: number,
+  haircut_id: number
 }
 
 export interface DailyReport {
   date: string;
   expenses: { id: number }[];
-  haircuts: { id: number }[];
+  haircuts: {
+    haircut_id: number; id: number 
+}[];
   id: number,
 }
 
