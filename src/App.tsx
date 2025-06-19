@@ -211,13 +211,38 @@ function App() {
 
   }
 
+  const [isYearSelectorOpen, setIsYearSelectorOpen] = useState(false);
+  const yearOptions = Array.from({ length: 7 }, (_, i) => dayjs().year() - 3 + i);
+
+
   return (
     <>
       <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900 shadow-xl'>
 
         <section className='flex flex-col py-2 px-4 font-croissant'>
           <div className='flex flex-row justify-between'>
-            <button className='text-base'>{selectedDate.format("YYYY")}</button>
+            <button className='text-base'
+              onClick={() => setIsYearSelectorOpen(prev => !prev)}
+            >
+              {selectedDate.format("YYYY")}
+            </button>
+            {isYearSelectorOpen && (
+              <ul className='absolute mt-1 bg-white border rounded shadow-md z-50 max-h-60 overflow-y-auto'>
+                {yearOptions.map((year) => (
+                  <li
+                    key={year}
+                    className={`px-4 py-2 cursor-pointer hover:bg-slate-200 ${selectedDate.year() === year ? 'bg-slate-300' : ''}`}
+                    onClick={() => {
+                      setSelectedDate(selectedDate.year(year));
+                      setIsYearSelectorOpen(false);
+                    }}
+                  >
+                    {year}
+                  </li>
+                ))}
+              </ul>
+            )}
+
 
 
             <div className='w-[40px] h-[40px] rounded-full bg-cover bg-center'
