@@ -83,12 +83,12 @@ function App() {
   const [isHaircutsOpen, setIsHaircutsOpen] = useState(false)
   const [isExpensesOpen, setIsExpensesOpen] = useState(false)
 
-  // Add
+  // Haircuts Made Add and Remove
 
   const db = getDatabase();
   const selectedDateFormatted = selectedDate.format('DD-MM-YYYY');
 
-  const addHaircut = async (haircutId: number) => {
+  const addHaircutDone = async (haircutId: number) => {
 
     const existingReport = dailyReportsArray.find(
       report => report.date === selectedDateFormatted
@@ -97,19 +97,16 @@ function App() {
     if (existingReport) {
       const reportRef = ref(db, `daily_reports/${existingReport.id}`);
 
-      console.log(reportRef)
-
       const newHaircut = {
         id: haircutId,
       };
-      
+
       await update(reportRef, {
         haircuts: [...existingReport.haircuts, newHaircut]
       });
 
     } else {
       const newId = Object.keys(data.daily_reports || {}).length.toString();
-
       await set(ref(db, `daily_reports/${newId}`), {
         date: selectedDateFormatted,
         expenses: [{}],
@@ -119,6 +116,25 @@ function App() {
 
     }
 
+  };
+
+  const deleteHaircutDone = async (haircutId: number) => {
+    const existingReport = dailyReportsArray.find(
+      report => report.date === selectedDateFormatted
+    );
+
+    if (existingReport) {
+      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+
+      // Filtra os cortes de cabelo removendo aquele com o id passado
+      const updatedHaircuts = existingReport.haircuts.filter(
+        (haircut: { id: number }) => haircut.id !== haircutId
+      );
+
+      await update(reportRef, {
+        haircuts: updatedHaircuts
+      });
+    }
   };
 
   return (
@@ -193,7 +209,7 @@ function App() {
                   </span>
 
                   <button
-                    onClick={() => addHaircut(haircut.id)}
+                    onClick={() => addHaircutDone(haircut.id)}
                   >
                     <MdAddCircleOutline />
                   </button>
@@ -234,7 +250,11 @@ function App() {
                 reports.haircuts.map((haircut, key) => (
                   <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
 
-                    <FaTrash />
+                    <button
+                      onClick={() => deleteHaircutDone(haircut.id)}
+                    >
+                      <FaTrash />
+                    </button>
 
                     <span className='font-light text-base'>
                       {data.haircuts[haircut.id].name} - R${data.haircuts[haircut.id].price}
