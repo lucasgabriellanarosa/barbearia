@@ -5,7 +5,6 @@ import app from '../firebase';
 
 const defaultDatabaseData: DatabaseData = {
   categories: [],
-  expenses: [],
   haircuts: [],
   daily_reports: []
 };
@@ -16,7 +15,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const [data, setData] = useState<DatabaseData>({
         categories: [],
-        expenses: [],
         haircuts: [],
         daily_reports: [],
     });
