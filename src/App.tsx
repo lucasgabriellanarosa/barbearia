@@ -6,6 +6,7 @@ import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icon
 import SectionContainer from './components/SectionContainer';
 import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
 import type { DailyReport, DatabaseData } from './@types/Database';
+import { getDatabase, ref, set, update } from 'firebase/database';
 
 function App() {
 
@@ -31,24 +32,27 @@ function App() {
   const [reports, setReports] = useState<DailyReport>({
     date: "",
     expenses: [],
-    haircuts: []
+    haircuts: [],
+    id: 0
   })
 
+  const dailyReportsArray = Object.values(data.daily_reports || {});
+
+
   useEffect(() => {
-    // 1. Atualizar os reports (sua lógica existente)
     if (data.daily_reports) {
-      const filteredReport = data.daily_reports.find(report =>
+      const filteredReport = dailyReportsArray.find(report =>
         report.date === selectedDate.format('DD-MM-YYYY')
       );
 
       setReports(filteredReport || {
         date: selectedDate.format('DD-MM-YYYY'),
         expenses: [],
-        haircuts: []
+        haircuts: [],
+        id: 0,
       });
     }
 
-    // 2. Scroll para o dia selecionado (nova lógica)
     if (carouselRef.current) {
       const selectedDayElement = carouselRef.current.querySelector(
         `[data-day="${selectedDate.format('DD-MM-YYYY')}"]`
@@ -64,13 +68,12 @@ function App() {
   }, [selectedDate, data.daily_reports]);
 
   // Money Values
-
-  const totalHaircuts = reports.haircuts.reduce((sum, haircut) => {
-    return sum + Number(data.haircuts[haircut.id]?.price || 0);
+  const totalHaircuts = (reports.haircuts || []).reduce((sum, haircut) => {
+    return sum + Number(data.haircuts?.[haircut.id]?.price || 0);
   }, 0);
 
-  const totalExpenses = reports.expenses.reduce((sum, expense) => {
-    return sum + Number(data.expenses[expense.id]?.price || 0);
+  const totalExpenses = (reports.expenses || []).reduce((sum, expense) => {
+    return sum + Number(data.expenses?.[expense.id]?.price || 0);
   }, 0);
 
   const total = totalHaircuts - totalExpenses
@@ -80,6 +83,44 @@ function App() {
   const [isHaircutsOpen, setIsHaircutsOpen] = useState(false)
   const [isExpensesOpen, setIsExpensesOpen] = useState(false)
 
+  // Add
+
+  const db = getDatabase();
+  const selectedDateFormatted = selectedDate.format('DD-MM-YYYY');
+
+  const addHaircut = async (haircutId: number) => {
+
+    const existingReport = dailyReportsArray.find(
+      report => report.date === selectedDateFormatted
+    );
+
+    if (existingReport) {
+      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+
+      console.log(reportRef)
+
+      const newHaircut = {
+        id: haircutId,
+      };
+      
+      await update(reportRef, {
+        haircuts: [...existingReport.haircuts, newHaircut]
+      });
+
+    } else {
+      const newId = Object.keys(data.daily_reports || {}).length.toString();
+
+      await set(ref(db, `daily_reports/${newId}`), {
+        date: selectedDateFormatted,
+        expenses: [{}],
+        haircuts: [{ id: haircutId }],
+        id: newId
+      });
+
+    }
+
+  };
+
   return (
     <>
       <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900 shadow-xl'>
@@ -87,6 +128,12 @@ function App() {
         <section className='flex flex-col py-2 px-4 font-croissant'>
           <div className='flex flex-row justify-between'>
             <button className='text-base'>{selectedDate.format("YYYY")}</button>
+
+
+            <div className='w-[40px] h-[40px] rounded-full bg-cover bg-center'
+              style={{ backgroundImage: "url('/rhuan.jpg')" }}>
+            </div>
+
           </div>
 
           <nav className='flex flex-row items-center justify-around text-2xl'>
@@ -145,8 +192,11 @@ function App() {
                     {haircut.name} (R${haircut.price})
                   </span>
 
-                  <MdAddCircleOutline />
-
+                  <button
+                    onClick={() => addHaircut(haircut.id)}
+                  >
+                    <MdAddCircleOutline />
+                  </button>
                 </li>
 
               ))
@@ -180,17 +230,20 @@ function App() {
           <ul className={`transition-all duration-100 ${isHaircutsOpen ? 'block' : 'hidden'}`}>
 
             {
-              reports.haircuts.map((haircut, key) => (
-                <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+              reports.haircuts > [] ?
+                reports.haircuts.map((haircut, key) => (
+                  <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
 
-                  <FaTrash />
+                    <FaTrash />
 
-                  <span className='font-light text-base'>
-                    {data.haircuts[haircut.id].name} - R${data.haircuts[haircut.id].price}
-                  </span>
+                    <span className='font-light text-base'>
+                      {data.haircuts[haircut.id].name} - R${data.haircuts[haircut.id].price}
+                    </span>
 
-                </li>
-              ))
+                  </li>
+                ))
+                :
+                <p className='text-rose-200'>Trabalhou ainda não né kk</p>
             }
 
           </ul>
@@ -246,9 +299,9 @@ function App() {
 
               {
                 isExpensesOpen ?
-                <FaCaretUp />
-                :
-                <FaCaretDown /> 
+                  <FaCaretUp />
+                  :
+                  <FaCaretDown />
               }
 
             </button>
@@ -260,18 +313,20 @@ function App() {
 
             {
 
-              reports.expenses.map((expense, key) => (
-                <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+              reports.expenses > [] ?
+                reports.expenses.map((expense, key) => (
+                  <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
 
-                  <FaTrash />
+                    <FaTrash />
 
-                  <span className='font-light text-base'>
-                    {data.expenses[expense.id].name} - R${data.expenses[expense.id].price}
-                  </span>
+                    <span className='font-light text-base'>
+                      {data.expenses[expense.id].name} - R${data.expenses[expense.id].price}
+                    </span>
 
-                </li>
-              ))
-
+                  </li>
+                ))
+                :
+                <p className='text-rose-200'>Confere ai se não tem nenhuma compra suspeita no seu cartão kkk</p>
             }
 
           </ul>
