@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import './App.css'
 import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
@@ -7,8 +6,12 @@ import SectionContainer from './components/SectionContainer';
 import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
 import type { DailyReport, DatabaseData } from './@types/Database';
 import { getDatabase, ref, set, update } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import './App.css'
 
 function App() {
+  const auth = getAuth();
+  const uid = auth.currentUser?.uid;
 
   // Database
   const data = useDatabaseContext() as DatabaseData
@@ -99,7 +102,7 @@ function App() {
   const addHaircutDone = async (haircutId: number) => {
 
     if (existingReport) {
-      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+      const reportRef = ref(db, `users/${uid}/daily_reports/${existingReport.id}`);
 
       const newHaircut = {
         id: Date.now().toString(),
@@ -114,7 +117,7 @@ function App() {
 
     } else {
       const newId = Object.keys(data.daily_reports || {}).length.toString();
-      await set(ref(db, `daily_reports/${newId}`), {
+      await set(ref(db, `users/${uid}/daily_reports/${newId}`), {
         date: selectedDateFormatted,
         expenses: [],
         haircuts: [{ id: Date.now().toString(), haircut_id: haircutId }],
@@ -126,7 +129,7 @@ function App() {
   const deleteHaircutDone = async (haircutToDelete: number) => {
 
     if (existingReport) {
-      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+      const reportRef = ref(db, `users/${uid}/daily_reports/${existingReport.id}`);
 
       const updatedHaircuts = (Array.isArray(existingReport.haircuts) ? existingReport.haircuts : []).filter(
         (haircut: { id: number }) => haircut.id !== haircutToDelete
@@ -163,7 +166,7 @@ function App() {
 
     if (existingReport) {
 
-      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+      const reportRef = ref(db, `users/${uid}/daily_reports/${existingReport.id}`);
 
       await update(reportRef, {
         ...existingReport,
@@ -174,7 +177,7 @@ function App() {
     } else {
 
       const newId = Date.now().toString();
-      await set(ref(db, `daily_reports/${newId}`), {
+      await set(ref(db, `users/${uid}/daily_reports/${newId}`), {
         date: selectedDateFormatted,
         expenses: [{
           id: Object.keys(data.daily_reports || {}).length.toString(),
@@ -197,7 +200,7 @@ function App() {
   const deleteExpense = async (expenseId: number) => {
 
     if (existingReport) {
-      const reportRef = ref(db, `daily_reports/${existingReport.id}`);
+      const reportRef = ref(db, `users/${uid}/daily_reports/${existingReport.id}`);
 
       const updatedExpenses = (Array.isArray(existingReport.expenses) ? existingReport.expenses : []).filter(
         (expense: { id: number }) => expense.id !== expenseId
