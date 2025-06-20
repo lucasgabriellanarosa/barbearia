@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }: Props) {
       setLoading(false);
 
       if (!user) {
-        navigate("/");
+        navigate("/login");
       }
     });
 

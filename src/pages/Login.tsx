@@ -14,7 +14,7 @@ function Login() {
 
       console.log("Usuário autenticado:", user);
 
-      navigate("/app");
+      navigate("/");
     } catch (error: any) {
       console.error("Erro no login:", error.message);
     }
