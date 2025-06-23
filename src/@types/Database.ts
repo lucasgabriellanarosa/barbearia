@@ -2,7 +2,7 @@ interface Category {
   name: string;
 }
 
-interface Haircut {
+export interface Haircut {
   name: string;
   price: number;
   id: number,

@@ -4,10 +4,11 @@ import dayjs from 'dayjs';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import SectionContainer from './components/SectionContainer';
 import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
-import type { DailyReport, DatabaseData } from './@types/Database';
+import type { DailyReport, DatabaseData, Haircut } from './@types/Database';
 import { getDatabase, ref, set, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import './App.css'
+import { FaSave } from 'react-icons/fa';
 
 function App() {
   const auth = getAuth();
@@ -71,6 +72,11 @@ function App() {
     if (data.categories && data.categories.length > 0) {
       setExpenseCategory(prev => prev || data.categories[0].name);
     }
+
+    if (data.haircuts > []) {
+      setHaircuts(data.haircuts)
+    }
+
 
   }, [selectedDate, data.daily_reports]);
 
@@ -217,6 +223,29 @@ function App() {
   const [isYearSelectorOpen, setIsYearSelectorOpen] = useState(false);
   const yearOptions = Array.from({ length: 7 }, (_, i) => dayjs().year() - 3 + i);
 
+  // Edit 
+
+  const [haircuts, setHaircuts] = useState<Haircut[]>([]);
+
+  const [isHairEditModalOpen, setIsHairEditModalOpen] = useState(false)
+
+  const saveAllHaircutsEdit = async () => {
+    try {
+      const db = getDatabase();
+      for (const haircut of haircuts) {
+        const haircutRef = ref(db, `users/${uid}/haircuts/${haircut.id}`);
+        await update(haircutRef, {
+          name: haircut.name.trim(),
+          price: haircut.price,
+        });
+      }
+      setIsHairEditModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao salvar cortes:", err);
+      alert("Erro ao salvar cortes. Tente novamente.");
+    }
+  };
+
 
   return (
     <>
@@ -286,6 +315,7 @@ function App() {
 
       </header >
 
+
       <main className='pt-36 pb-8 px-2 bg-slate-50 text-rose-900 flex flex-col gap-4'>
 
         <section className='flex flex-col justify-center items-center'>
@@ -297,30 +327,91 @@ function App() {
 
           <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
             <h2 className='font-bold text-lg'>Cortes</h2>
-            <FaPencil />
-          </div>
-
-          <ul className='flex flex-col gap-2'>
 
             {
-              data.haircuts.map((haircut, key) => (
+              isHairEditModalOpen ?
+                <button
+                  onClick={saveAllHaircutsEdit}
+                >
+                  <FaSave />
+                </button>
+                :
+                <button
+                  onClick={() => setIsHairEditModalOpen(!isHairEditModalOpen)}
+                >
+                  <FaPencil />
 
-                <li className='flex flex-row items-center justify-between text-rose-100 text-xl' key={key}>
-                  <span className='font-light text-base'>
-                    {haircut.name} (R${haircut.price})
-                  </span>
-
-                  <button
-                    onClick={() => addHaircutDone(haircut.id)}
-                  >
-                    <MdAddCircleOutline />
-                  </button>
-                </li>
-
-              ))
+                </button>
             }
 
-          </ul>
+          </div>
+
+
+          {
+            isHairEditModalOpen ?
+              <>
+
+                <ul className='flex flex-col gap-2'>
+
+                  {
+                    haircuts.map((haircut, key) => (
+
+                      <li className='flex flex-row items-center justify-between text-rose-100 text-base' key={key}>
+
+                        <input type="text"
+                          value={haircut.name}
+                          onChange={(e) => {
+                            const updated = [...haircuts];
+                            updated[key].name = e.target.value;
+                            setHaircuts(updated);
+                          }}
+                          className='w-1/2 border py-1 px-2 rounded-sm text-rose-300' />
+
+                        <input
+                          type="number"
+                          value={haircut.price}
+                          onChange={(e) => {
+                            const updated = [...haircuts];
+                            updated[key].price = parseFloat(e.target.value);
+                            setHaircuts(updated);
+                          }}
+                          className='w-1/4 border px-2 py-1 rounded-md text-rose-300'
+                        />
+
+                      </li>
+
+                    ))
+                  }
+
+                </ul>
+
+              </>
+              :
+              <ul className='flex flex-col gap-2'>
+
+                {
+                  data.haircuts.map((haircut, key) => (
+
+                    <li className='flex flex-row items-center justify-between text-rose-100 text-xl' key={key}>
+                      <span className='font-light text-base'>
+                        {haircut.name} (R${haircut.price})
+                      </span>
+
+                      <button
+                        onClick={() => addHaircutDone(haircut.id)}
+                      >
+                        <MdAddCircleOutline />
+                      </button>
+                    </li>
+
+                  ))
+                }
+
+              </ul>
+          }
+
+
+
 
         </SectionContainer>
 
@@ -483,7 +574,7 @@ function App() {
 
         <p className='text-lg font-bold'>Gastos Totais: -R${totalExpenses.toFixed(2)}</p>
 
-      </main>
+      </main >
 
     </>
   )
