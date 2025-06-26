@@ -234,17 +234,24 @@ function App() {
       const db = getDatabase();
       for (const haircut of haircuts) {
         const haircutRef = ref(db, `users/${uid}/haircuts/${haircut.id}`);
-        await update(haircutRef, {
+        await set(haircutRef, {
           name: haircut.name.trim(),
           price: haircut.price,
+          id: haircut.id,         // importante manter o ID para futuras edições
         });
       }
       setIsHairEditModalOpen(false);
+      alert("Cortes salvos com sucesso!");
     } catch (err) {
       console.error("Erro ao salvar cortes:", err);
       alert("Erro ao salvar cortes. Tente novamente.");
     }
   };
+
+
+  const [newHaircutName, setNewHaircutName] = useState('');
+  const [newHaircutPrice, setNewHaircutPrice] = useState('');
+
 
 
   return (
@@ -274,8 +281,6 @@ function App() {
                 ))}
               </ul>
             )}
-
-
 
             <div className='w-[40px] h-[40px] rounded-full bg-cover bg-center'
               style={{ backgroundImage: "url('/rhuan.jpg')" }}>
@@ -382,6 +387,55 @@ function App() {
 
                     ))
                   }
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!newHaircutName || !newHaircutPrice) return;
+                      const lastHaircutId = data.haircuts && data.haircuts.length > 0
+                        ? Math.max(...data.haircuts.map(h => h.id || 0))
+                        : 0;
+                      const newHaircut = {
+                        name: newHaircutName,
+                        price: parseFloat(newHaircutPrice),
+                        id: lastHaircutId + 1,
+                      };
+
+                      setHaircuts(prev => [...prev, newHaircut]);
+                      setNewHaircutName('');
+                      setNewHaircutPrice('');
+                    }}
+                    className="flex flex-col gap-4 mt-4"
+                  >
+                    <div
+                      className='flex flex-row justify-between text-rose-500'>
+                      <input
+                        type="text"
+                        placeholder="Novo Corte"
+                        value={newHaircutName}
+                        onChange={(e) => setNewHaircutName(e.target.value)}
+                        className="border py-1 px-2 rounded-sm"
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Preço"
+                        value={newHaircutPrice}
+                        onChange={(e) => setNewHaircutPrice(e.target.value)}
+                        className="w-1/4 border py-1 px-2 rounded-sm"
+                      />
+
+                    </div>
+
+
+                    <button
+                      type="submit"
+                      className="bg-rose-800 text-white rounded-sm w-fit self-center py-2 px-4"
+                    >
+                      + Adicionar
+                    </button>
+                  </form>
+
 
                 </ul>
 

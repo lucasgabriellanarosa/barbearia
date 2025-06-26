@@ -6,7 +6,6 @@ export interface Haircut {
   name: string;
   price: number;
   id: number,
-  haircut_id: number
 }
 
 export interface DailyReport {
