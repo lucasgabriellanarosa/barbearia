@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import SectionContainer from './components/SectionContainer';
 import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
-import type { DailyReport, DatabaseData, Haircut } from './@types/Database';
+import type { Category, DailyReport, DatabaseData, Haircut } from './@types/Database';
 import { getDatabase, ref, set, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import './App.css'
@@ -70,11 +70,19 @@ function App() {
     }
 
     if (data.categories && data.categories.length > 0) {
-      setExpenseCategory(prev => prev || data.categories[0].name);
+      const firstValidCategory = data.categories.find(cat => cat && cat.name);
+      if (firstValidCategory) {
+        setExpenseCategory(prev => prev || firstValidCategory.name);
+      }
     }
+
 
     if (data.haircuts > []) {
       setHaircuts(data.haircuts)
+    }
+
+    if (data.categories > []) {
+      setCategories(data.categories)
     }
 
 
@@ -223,7 +231,7 @@ function App() {
   const [isYearSelectorOpen, setIsYearSelectorOpen] = useState(false);
   const yearOptions = Array.from({ length: 7 }, (_, i) => dayjs().year() - 3 + i);
 
-  // Edit 
+  // Edit Haircuts
 
   const [haircuts, setHaircuts] = useState<Haircut[]>([]);
 
@@ -237,7 +245,7 @@ function App() {
         await set(haircutRef, {
           name: haircut.name.trim(),
           price: haircut.price,
-          id: haircut.id,         // importante manter o ID para futuras edições
+          id: haircut.id,
         });
       }
       setIsHairEditModalOpen(false);
@@ -252,6 +260,42 @@ function App() {
   const [newHaircutName, setNewHaircutName] = useState('');
   const [newHaircutPrice, setNewHaircutPrice] = useState('');
 
+  // Edit Categories
+
+  const [isCategoryEditModalOpen, setIsCategoryEditModalOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  const addNewCategory = () => {
+    if (!newCategoryName.trim()) return;
+
+    const newCategory = {
+      name: newCategoryName.trim(),
+      id: Date.now().toString(),
+    };
+
+    setCategories(prev => [...prev, newCategory]);
+
+    setNewCategoryName('');
+  };
+
+  const saveAllCategories = async () => {
+    try {
+      const categoriesRef = ref(db, `users/${uid}/categories`);
+      await set(categoriesRef, categories.map(cat => ({
+        name: cat.name.trim(),
+        id: cat.id
+      })));
+      setIsCategoryEditModalOpen(false)
+      alert("Categories salvas com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar categorias:", err);
+      alert("Erro ao salvar categorias. Tente novamente.");
+    }
+  }
+
+  console.log(data.categories)
+  console.log(data.haircuts)
 
 
   return (
@@ -523,57 +567,113 @@ function App() {
 
           <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
             <h2 className='font-bold text-lg'>Gastos</h2>
-            <FaPencil />
+            {
+              isCategoryEditModalOpen ?
+                <button
+                  onClick={() => saveAllCategories()}
+                >
+                  <FaSave />
+                </button>
+                :
+                <button
+                  onClick={() => setIsCategoryEditModalOpen(!isCategoryEditModalOpen)}
+                >
+                  <FaPencil />
+                </button>
+            }
           </div>
 
-          <form className='flex flex-col gap-4'
-            onSubmit={(e) => {
-              e.preventDefault();
-              addExpense();
-            }}
-          >
+          {
+            isCategoryEditModalOpen ? (
+              <>
+                <ul className='flex flex-col gap-2'>
+                  {categories.map((category, key) => (
+                    <li key={key} className='flex items-center gap-2'>
+                      <input
+                        type="text"
+                        value={category.name}
+                        onChange={(e) => {
+                          const updated = [...categories];
+                          updated[key].name = e.target.value;
+                          setCategories(updated);
+                        }}
+                        className='border px-2 py-1 rounded w-full text-rose-300'
+                      />
+                    </li>
+                  ))}
+                </ul>
 
-            <div className='flex flex-col gap-1'>
-              <label className='text-sm text-rose-100'>Gasto</label>
-              <input
-                className='border border-black rounded-md bg-white py-1 px-2'
-                value={expenseName}
-                onChange={(e) => setExpenseName(e.target.value)}
-              />
-            </div>
+                <div className='flex flex-col gap-2 mt-4'>
+                  <input
+                    type="text"
+                    placeholder="Nova categoria"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className='border px-2 py-1 rounded text-rose-600'
+                  />
 
-            <div className='flex flex-col gap-1'>
-              <label className='text-sm text-rose-100'>Valor</label>
-              <input
-                className='border border-black rounded-md bg-white py-1 px-2'
-                type='number'
-                value={expensePrice}
-                onChange={(e) => setExpensePrice(e.target.value)}
-              />
-            </div>
+                  <button
+                    onClick={addNewCategory}
+                    className="bg-rose-800 text-white rounded-sm w-fit self-center py-2 px-4"
+                  >
+                    + Adicionar Categoria
+                  </button>
 
-            <div className='flex flex-col gap-1'>
-              <label className='text-sm text-rose-100'>Categoria</label>
-
-              <select
-                className='bg-white py-1 px-2 capitalize rounded-md'
-                value={expenseCategory}
-                onChange={(e) => setExpenseCategory(e.target.value)}
+                </div>
+              </>
+            ) : (
+              <form
+                className='flex flex-col gap-4'
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  addExpense();
+                }}
               >
-                {data.categories.map((category, key) => (
-                  <option value={category.name} key={key}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm text-rose-100'>Gasto</label>
+                  <input
+                    className='border border-black rounded-md bg-white py-1 px-2'
+                    value={expenseName}
+                    onChange={(e) => setExpenseName(e.target.value)}
+                  />
+                </div>
 
-            </div>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm text-rose-100'>Valor</label>
+                  <input
+                    className='border border-black rounded-md bg-white py-1 px-2'
+                    type='number'
+                    value={expensePrice}
+                    onChange={(e) => setExpensePrice(e.target.value)}
+                  />
+                </div>
 
-            <button type='submit' className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'>
-              + Salvar Gasto
-            </button>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm text-rose-100'>Categoria</label>
 
-          </form>
+                  <select
+                    className='bg-white py-1 px-2 capitalize rounded-md'
+                    value={expenseCategory}
+                    onChange={(e) => setExpenseCategory(e.target.value)}
+                  >
+                    {Object.values(data.categories || {}).map((category: { id: string | number; name: string }, key) => (
+                      <option value={category.name} key={key}>
+                        {category.name}
+                      </option>
+                    ))}
+
+                  </select>
+                </div>
+
+                <button
+                  type='submit'
+                  className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'
+                >
+                  + Salvar Gasto
+                </button>
+              </form>
+            )
+          }
 
         </SectionContainer>
 

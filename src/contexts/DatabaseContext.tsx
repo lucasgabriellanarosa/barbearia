@@ -48,7 +48,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             console.error("Erro ao buscar dados do usuário:", error);
         });
 
-        return () => unsubscribe(); // limpa o listener ao desmontar
+        return () => unsubscribe();
     }, [uid]);
 
     return (
