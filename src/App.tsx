@@ -13,6 +13,7 @@ import { FaSave } from 'react-icons/fa';
 function App() {
   const auth = getAuth();
   const uid = auth.currentUser?.uid;
+  const user = auth.currentUser;
 
   // Database
   const data = useDatabaseContext() as DatabaseData
@@ -294,9 +295,7 @@ function App() {
     }
   }
 
-  console.log(data.categories)
-  console.log(data.haircuts)
-
+  console.log(user)
 
   return (
     <>
@@ -325,11 +324,10 @@ function App() {
                 ))}
               </ul>
             )}
-
-            <div className='w-[40px] h-[40px] rounded-full bg-cover bg-center'
-              style={{ backgroundImage: "url('/rhuan.jpg')" }}>
-            </div>
-
+            <div
+              className='w-[40px] h-[40px] rounded-full bg-cover bg-center'
+              style={{ backgroundImage: `url('${user?.photoURL || "/default-avatar.png"}')` }}
+            ></div>
           </div>
 
           <nav className='flex flex-row items-center justify-around text-2xl'>
