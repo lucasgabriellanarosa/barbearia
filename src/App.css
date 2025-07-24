@@ -5,4 +5,23 @@
     --font-roboto: "Roboto Serif", serif;
     --font-croissant: "Croissant One", serif;
 
+    /* OLDER COLORS */
+    /* --color-bgLight: #e2e8f0;
+    --color-bgDarkPrimary: #0f172a;
+    --color-bgDarkSecondary: #1e293b;
+    --color-bgDarkThird: #334155;
+    --color-bgDarkBtn: #020617;
+    --color-textPrimary: #881337;
+    --color-textSecondary: #be123c;
+    --color-textThird: #fecdd3; */
+
+    /* NEW COLORS */
+    --color-bgLight: #e2e8f0;
+    --color-bgDarkPrimary: #0f172a;
+    --color-bgDarkSecondary: #1e293b;
+    --color-bgDarkThird: #334155;
+    --color-bgDarkBtn: #020617;
+    --color-textPrimary: #525252;
+    --color-textSecondary: #737373;
+    --color-textThird: #f8fafc;
 }

@@ -299,7 +299,7 @@ function App() {
 
   return (
     <>
-      <header className='fixed flex flex-col w-full bg-slate-900 text-rose-900 shadow-xl'>
+      <header className='fixed flex flex-col w-full bg-bgDarkPrimary text-textPrimary shadow-xl'>
 
         <section className='flex flex-col py-2 px-4 font-croissant'>
           <div className='flex flex-row justify-between'>
@@ -313,7 +313,7 @@ function App() {
                 {yearOptions.map((year) => (
                   <li
                     key={year}
-                    className={`px-4 py-2 cursor-pointer hover:bg-slate-200 ${selectedDate.year() === year ? 'bg-slate-300' : ''}`}
+                    className={`px-4 py-2 cursor-pointer hover:bg-bgLight ${selectedDate.year() === year ? 'bg-bgLight' : ''}`}
                     onClick={() => {
                       setSelectedDate(selectedDate.year(year));
                       setIsYearSelectorOpen(false);
@@ -343,15 +343,15 @@ function App() {
 
         <ul
           ref={carouselRef}
-          className='bg-slate-800 flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant scrollbar-hide'
+          className='bg-bgDarkSecondary flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant scrollbar-hide'
         >
           {daysInMonth.map((day) => (
             <li
               key={day.format('DD-MM-YYYY')}
               data-day={day.format('DD-MM-YYYY')}
               className={`py-1 px-2 rounded-sm cursor-pointer min-w-[2.5rem] text-center ${day.isSame(selectedDate, 'day')
-                ? 'text-rose-200 bg-rose-900'
-                : 'text-rose-200 bg-slate-700 hover:bg-rose-700'
+                ? 'text-textThird bg-textPrimary'
+                : 'text-textThird bg-bgDarkThird hover:bg-textPrimary'
                 }`}
               onClick={() => setSelectedDate(day)}
             >
@@ -363,16 +363,16 @@ function App() {
       </header >
 
 
-      <main className='pt-36 pb-8 px-2 bg-slate-50 text-rose-900 flex flex-col gap-4'>
+      <main className='pt-36 pb-8 px-2 bg-Light text-textPrimary flex flex-col gap-4'>
 
         <section className='flex flex-col justify-center items-center'>
           <h1 className='text-lg font-bold'>{selectedDate.format("DD/MM/YYYY")}</h1>
-          <p className='text-base text-rose-800'>Total do dia: <span className='font-bold'>R${total}</span></p>
+          <p className='text-base text-textSecondary'>Total do dia: <span className='font-bold'>R${total}</span></p>
         </section>
 
         <SectionContainer>
 
-          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+          <div className='flex flex-row justify-between items-center text-textSecondary text-xl'>
             <h2 className='font-bold text-lg'>Cortes</h2>
 
             {
@@ -403,7 +403,7 @@ function App() {
                   {
                     haircuts.map((haircut, key) => (
 
-                      <li className='flex flex-row items-center justify-between text-rose-100 text-base' key={key}>
+                      <li className='flex flex-row items-center justify-between text-textThird text-base' key={key}>
 
                         <input type="text"
                           value={haircut.name}
@@ -412,7 +412,7 @@ function App() {
                             updated[key].name = e.target.value;
                             setHaircuts(updated);
                           }}
-                          className='w-1/2 border py-1 px-2 rounded-sm text-rose-300' />
+                          className='w-1/2 border py-1 px-2 rounded-sm text-textThird' />
 
                         <input
                           type="number"
@@ -422,7 +422,7 @@ function App() {
                             updated[key].price = parseFloat(e.target.value);
                             setHaircuts(updated);
                           }}
-                          className='w-1/4 border px-2 py-1 rounded-md text-rose-300'
+                          className='w-1/4 border px-2 py-1 rounded-md text-textThird'
                         />
 
                       </li>
@@ -450,7 +450,7 @@ function App() {
                     className="flex flex-col gap-4 mt-4"
                   >
                     <div
-                      className='flex flex-row justify-between text-rose-500'>
+                      className='flex flex-row justify-between text-textSecondary'>
                       <input
                         type="text"
                         placeholder="Novo Corte"
@@ -472,7 +472,7 @@ function App() {
 
                     <button
                       type="submit"
-                      className="bg-rose-800 text-white rounded-sm w-fit self-center py-2 px-4"
+                      className="bg-textPrimary text-white rounded-sm w-fit self-center py-2 px-4"
                     >
                       + Adicionar
                     </button>
@@ -488,7 +488,7 @@ function App() {
                 {
                   data.haircuts.map((haircut, key) => (
 
-                    <li className='flex flex-row items-center justify-between text-rose-100 text-xl' key={key}>
+                    <li className='flex flex-row items-center justify-between text-textThird text-xl' key={key}>
                       <span className='font-light text-base'>
                         {haircut.name} (R${haircut.price})
                       </span>
@@ -513,7 +513,7 @@ function App() {
 
         <SectionContainer>
 
-          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+          <div className='flex flex-row justify-between items-center text-textSecondary text-xl'>
             <h2 className='font-bold text-lg'>Lucros do dia</h2>
 
 
@@ -537,7 +537,7 @@ function App() {
             {
               reports.haircuts > [] ?
                 reports.haircuts.map((haircut, key) => (
-                  <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+                  <li className='flex flex-row items-center gap-2 text-textThird text-xl' key={key}>
 
                     <button
                       onClick={() => deleteHaircutDone(haircut.id)}
@@ -552,7 +552,7 @@ function App() {
                   </li>
                 ))
                 :
-                <p className='text-rose-200'>Trabalhou ainda não né kk</p>
+                <p className='text-textThird'>Trabalhou ainda não né kk</p>
             }
 
           </ul>
@@ -563,7 +563,7 @@ function App() {
 
         <SectionContainer>
 
-          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+          <div className='flex flex-row justify-between items-center text-textSecondary text-xl'>
             <h2 className='font-bold text-lg'>Gastos</h2>
             {
               isCategoryEditModalOpen ?
@@ -595,7 +595,7 @@ function App() {
                           updated[key].name = e.target.value;
                           setCategories(updated);
                         }}
-                        className='border px-2 py-1 rounded w-full text-rose-300'
+                        className='border px-2 py-1 rounded w-full text-textThird'
                       />
                     </li>
                   ))}
@@ -607,12 +607,12 @@ function App() {
                     placeholder="Nova categoria"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    className='border px-2 py-1 rounded text-rose-600'
+                    className='border px-2 py-1 rounded text-textSecondary'
                   />
 
                   <button
                     onClick={addNewCategory}
-                    className="bg-rose-800 text-white rounded-sm w-fit self-center py-2 px-4"
+                    className="bg-textPrimary text-white rounded-sm w-fit self-center py-2 px-4"
                   >
                     + Adicionar Categoria
                   </button>
@@ -628,7 +628,7 @@ function App() {
                 }}
               >
                 <div className='flex flex-col gap-1'>
-                  <label className='text-sm text-rose-100'>Gasto</label>
+                  <label className='text-sm text-textFourth'>Gasto</label>
                   <input
                     className='border border-black rounded-md bg-white py-1 px-2'
                     value={expenseName}
@@ -637,7 +637,7 @@ function App() {
                 </div>
 
                 <div className='flex flex-col gap-1'>
-                  <label className='text-sm text-rose-100'>Valor</label>
+                  <label className='text-sm text-textFourth'>Valor</label>
                   <input
                     className='border border-black rounded-md bg-white py-1 px-2'
                     type='number'
@@ -647,7 +647,7 @@ function App() {
                 </div>
 
                 <div className='flex flex-col gap-1'>
-                  <label className='text-sm text-rose-100'>Categoria</label>
+                  <label className='text-sm text-textFourth'>Categoria</label>
 
                   <select
                     className='bg-white py-1 px-2 capitalize rounded-md'
@@ -665,7 +665,7 @@ function App() {
 
                 <button
                   type='submit'
-                  className='bg-slate-950 text-rose-100 py-1 w-2/4 self-end rounded-sm shadow-md'
+                  className='bg-bgDarkBtn text-textThird py-1 w-2/4 self-end rounded-sm shadow-md'
                 >
                   + Salvar Gasto
                 </button>
@@ -677,7 +677,7 @@ function App() {
 
         <SectionContainer>
 
-          <div className='flex flex-row justify-between items-center text-rose-700 text-xl'>
+          <div className='flex flex-row justify-between items-center text-textSecondary text-xl'>
             <h2 className='font-bold text-lg'>Gastos do dia</h2>
 
             <button onClick={() => setIsExpensesOpen(!isExpensesOpen)}>
@@ -700,7 +700,7 @@ function App() {
 
               reports.expenses > [] ?
                 reports.expenses.map((expense, key) => (
-                  <li className='flex flex-row items-center gap-2 text-rose-100 text-xl' key={key}>
+                  <li className='flex flex-row items-center gap-2 text-textThird text-xl' key={key}>
 
                     <button
                       onClick={() => deleteExpense(expense.id)}
@@ -715,7 +715,7 @@ function App() {
                   </li>
                 ))
                 :
-                <p className='text-rose-200'>Confere ai se não tem nenhuma compra suspeita no seu cartão kkk</p>
+                <p className='text-textThird'>Confere ai se não tem nenhuma compra suspeita no seu cartão kkk</p>
             }
 
           </ul>
