@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDatabaseContext } from './contexts/DatabaseContext'
 import dayjs from 'dayjs';
+import 'dayjs/locale/pt-br';
 import { MdAddCircleOutline, MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
 import SectionContainer from './components/SectionContainer';
 import { FaCaretDown, FaCaretUp, FaPencil, FaTrash } from 'react-icons/fa6';
@@ -9,8 +10,14 @@ import { getDatabase, ref, set, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import './App.css'
 import { FaSave } from 'react-icons/fa';
+import { IoIosClose } from 'react-icons/io';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
 
 function App() {
+  dayjs.locale('pt-br');
+  dayjs.extend(customParseFormat);
+
   const auth = getAuth();
   const uid = auth.currentUser?.uid;
   const user = auth.currentUser;
@@ -295,7 +302,43 @@ function App() {
     }
   }
 
-  console.log(user)
+  // Mensal Info
+
+  const [isMensalInfoOpen, setIsMensalInfoOpen] = useState(false)
+
+  const totalMonthlyExpenses = Object.values(data.daily_reports).reduce((total, report) => {
+    const reportDate = dayjs(report.date, "DD-MM-YYYY"); // parse da string "24-07-2025"
+    const reportMonth = reportDate.format("MMMM"); // Ex: "julho"
+    const selectedMonth = selectedDate.format("MMMM"); // Ex: "julho"
+
+    if (reportMonth === selectedMonth) {
+      const monthlySum = (report.expenses || []).reduce((sum, expense) => {
+        return sum + Number(expense.price || 0);
+      }, 0);
+
+      return total + monthlySum;
+    }
+
+    return total;
+  }, 0);
+
+  const totalMonthlyHaircuts = (data?.daily_reports && haircuts)
+    ? Object.values(data.daily_reports).reduce((total, report) => {
+      const reportDate = dayjs(report.date, "DD-MM-YYYY");
+      const reportMonth = reportDate.format("MMMM");
+      const selectedMonth = selectedDate.format("MMMM");
+
+      if (reportMonth === selectedMonth) {
+        const monthlySum = (report.haircuts || []).reduce((sum, reportHaircut) => {
+          return sum + Number(haircuts[reportHaircut.haircut_id]?.price || 0);
+        }, 0);
+
+        return total + monthlySum;
+      }
+
+      return total;
+    }, 0)
+    : 0;
 
   return (
     <>
@@ -334,7 +377,7 @@ function App() {
             <span onClick={() => navigateMonth('prev')} className="cursor-pointer">
               <MdNavigateBefore />
             </span>
-            <button className='text-lg font-bold'>{selectedDate.format("MMMM")}</button>
+            <button className='text-lg font-bold capitalize'>{selectedDate.format("MMMM")}</button>
             <span onClick={() => navigateMonth('next')} className="cursor-pointer">
               <MdNavigateNext />
             </span>
@@ -365,10 +408,29 @@ function App() {
 
       <main className='pt-36 pb-8 px-2 bg-Light text-textPrimary flex flex-col gap-4'>
 
+
+        {
+          isMensalInfoOpen &&
+          <section className='bg-bgDarkPrimary fixed left-0 right-0 mx-2 shadow-md px-4 py-2 flex flex-col gap-4 h-[500px] text-textThird'>
+            <button className='text-textPrimary self-end text-3xl' onClick={() => setIsMensalInfoOpen(false)}>
+              <IoIosClose />
+            </button>
+            <h2 className='text-lg font-bold text-textPrimary capitalize'>{selectedDate.format("MMMM")}</h2>
+            <p>Gastos: R${totalMonthlyExpenses.toFixed(2)}</p>
+            <p>Cortes: R${totalMonthlyHaircuts.toFixed(2)}</p>
+            <p className='font-semibold italic text-lg'>Lucro: R${(totalMonthlyHaircuts - totalMonthlyExpenses).toFixed(2)}</p>
+          </section>
+        }
+
+
         <section className='flex flex-col justify-center items-center'>
           <h1 className='text-lg font-bold'>{selectedDate.format("DD/MM/YYYY")}</h1>
           <p className='text-base text-textSecondary'>Total do dia: <span className='font-bold'>R${total}</span></p>
         </section>
+
+        <button className='bg-bgDarkThird text-textThird py-1 w-fit self-center px-6 rounded-md' onClick={() => setIsMensalInfoOpen(true)}>
+          Total Mensal
+        </button>
 
         <SectionContainer>
 
