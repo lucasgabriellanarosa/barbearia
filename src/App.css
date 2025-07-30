@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Croissant+One&family=Roboto+Serif:ital,opsz,wght@0,8..144,100..900;1,8..144,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
     --font-roboto: "Roboto Serif", serif;
     --font-croissant: "Croissant One", serif;
-
+    --font-inter: "Inter", sans-serif;
     /* OLDER COLORS */
     /* --color-bgLight: #e2e8f0;
     --color-bgDarkPrimary: #0f172a;
@@ -16,12 +17,23 @@
     --color-textThird: #fecdd3; */
 
     /* NEW COLORS */
-    --color-bgLight: #e2e8f0;
+    /* --color-bgLight: #e2e8f0;
     --color-bgDarkPrimary: #0f172a;
     --color-bgDarkSecondary: #1e293b;
     --color-bgDarkThird: #334155;
     --color-bgDarkBtn: #020617;
     --color-textPrimary: #525252;
     --color-textSecondary: #737373;
-    --color-textThird: #f8fafc;
+    --color-textThird: #f8fafc; */
+
+    --color-bgLight: #e2e8f0;
+    --color-bgDarkPrimary: #111826;
+    --color-bgDarkSecondary: #394359;
+    --color-bgDarkThird: #75A1FF;
+    --color-bgDarkBtn: #8FA6D9;
+
+    --color-textPrimary: #8FA6D9;
+    --color-textSecondary: #91A0BF;
+    --color-textThird: #8F96A6;
+    --color-textFourth: #e2e8f0;
 }

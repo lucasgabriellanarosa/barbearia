@@ -342,9 +342,9 @@ function App() {
 
   return (
     <>
-      <header className='fixed flex flex-col w-full bg-bgDarkPrimary text-textPrimary shadow-xl'>
+      <header className='fixed flex flex-col w-full bg-bgDarkPrimary text-textPrimary shadow-xl font-inter'>
 
-        <section className='flex flex-col py-2 px-4 font-croissant'>
+        <section className='flex flex-col py-2 px-4'>
           <div className='flex flex-row justify-between'>
             <button className='text-base'
               onClick={() => setIsYearSelectorOpen(prev => !prev)}
@@ -386,15 +386,15 @@ function App() {
 
         <ul
           ref={carouselRef}
-          className='bg-bgDarkSecondary flex flex-row py-2 gap-4 px-4 overflow-x-auto font-croissant scrollbar-hide'
+          className='bg-bgDarkSecondary flex flex-row py-2 gap-4 px-4 overflow-x-auto scrollbar-hide text-textFourth'
         >
           {daysInMonth.map((day) => (
             <li
               key={day.format('DD-MM-YYYY')}
               data-day={day.format('DD-MM-YYYY')}
               className={`py-1 px-2 rounded-sm cursor-pointer min-w-[2.5rem] text-center ${day.isSame(selectedDate, 'day')
-                ? 'text-textThird bg-textPrimary'
-                : 'text-textThird bg-bgDarkThird hover:bg-textPrimary'
+                ? 'bg-textPrimary'
+                : 'bg-bgDarkThird hover:bg-textPrimary'
                 }`}
               onClick={() => setSelectedDate(day)}
             >
@@ -406,7 +406,7 @@ function App() {
       </header >
 
 
-      <main className='pt-36 pb-8 px-2 bg-Light text-textPrimary flex flex-col gap-4'>
+      <main className='pt-36 pb-8 px-2 bg-Light text-textPrimary flex flex-col gap-4 font-inter'>
 
 
         {
@@ -428,7 +428,7 @@ function App() {
           <p className='text-base text-textSecondary'>Total do dia: <span className='font-bold'>R${total}</span></p>
         </section>
 
-        <button className='bg-bgDarkThird text-textThird py-1 w-fit self-center px-6 rounded-md' onClick={() => setIsMensalInfoOpen(true)}>
+        <button className='bg-bgDarkBtn text-textFourth py-1 w-fit self-center px-6 rounded-md' onClick={() => setIsMensalInfoOpen(true)}>
           Total Mensal
         </button>
 
@@ -727,7 +727,7 @@ function App() {
 
                 <button
                   type='submit'
-                  className='bg-bgDarkBtn text-textThird py-1 w-2/4 self-end rounded-sm shadow-md'
+                  className='bg-bgDarkBtn text-textFourth py-1 w-2/4 self-end rounded-sm shadow-md'
                 >
                   + Salvar Gasto
                 </button>
